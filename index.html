@@ -1,50 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="1;url=https://script.google.com/macros/s/AKfycbzK2qI6lLZWNGopJrRM7dorLZ9pIAEg3Wn1eiZKswVnYmleD8TeMpo2r9HYvQDnvDSJ/exec">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loading…</title>
 
-  <title>Loading...</title>
+    <style>
+        /* --- Reset & base --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+        html,
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #080b10;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
 
-    body {
-      margin: 0;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #080b10;
-    }
+        /* --- Iframe — fills the viewport behind the loader --- */
+        #contentFrame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            display: block;
+            background: #080b10;
+            /* fallback while loading */;
+        }
 
-    .loader {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 3px solid rgba(255,255,255,0.08);
-      border-top-color: #219EBC;
-      border-right-color: #219EBC;
-      animation: spin 0.8s linear infinite;
-      box-shadow:
-        0 0 15px rgba(33,158,188,0.25),
-        0 0 35px rgba(33,158,188,0.08);
-    }
+        /* --- Loader overlay — sits on top of the iframe --- */
+        #loaderOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #080b10;
+            z-index: 999;
+            transition: opacity 0.7s ease, visibility 0.7s ease;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            /* block clicks while visible */;
+        }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
+        /* Hidden state — fully transparent and non-interactive */
+        #loaderOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* --- Spinner --- */
+        .loader {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.08);
+            border-top-color: #219EBC;
+            border-right-color: #219EBC;
+            animation: spin 0.8s linear infinite;
+            box-shadow:
+                0 0 15px rgba(33, 158, 188, 0.25),
+                0 0 35px rgba(33, 158, 188, 0.08);
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- Optional "loading" text --- */
+        .loader-label {
+            position: absolute;
+            bottom: calc(50% - 80px);
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 300;
+            user-select: none;
+        }
+
+        /* --- Small screen tweaks --- */
+        @media (max-width: 480px) {
+            .loader {
+                width: 40px;
+                height: 40px;
+                border-width: 2.5px;
+            }
+            .loader-label {
+                font-size: 11px;
+                bottom: calc(50% - 64px);
+            }
+        }
+    </style>
 </head>
 
 <body>
-  <div class="loader"></div>
+
+    <!-- ============================================================
+    TARGET URL — change the `src` value below to the website
+    you want to load behind the loading screen.
+    ============================================================ -->
+    <iframe
+    id="contentFrame"
+    src="https://script.google.com/macros/s/AKfycbwY5nr9_iCJKhWHdz5awyrpj9RxIltbqzhR980guQhS4SFEWONUgNhNgdQdNgqPpSu-Cw/exec"
+    title="Target website"
+    loading="eager"
+></iframe>
+
+<!-- ============================================================
+LOADER OVERLAY
+============================================================ -->
+<div id="loaderOverlay" aria-hidden="true">
+    <div class="loader"></div>
+    <span class="loader-label">Loading</span>
+</div>
+
+<!-- ============================================================
+SCRIPT — hides the loader once the iframe content loads
+============================================================ -->
+<script>
+    (function() {
+        'use strict';
+
+        const frame = document.getElementById('contentFrame');
+        const overlay = document.getElementById('loaderOverlay');
+
+        // --- Fallback timeout (safety net) ---
+        // If the iframe takes longer than 8 seconds, hide the loader anyway.
+        const FALLBACK_TIMEOUT_MS = 8000;
+
+        let loadCompleted = false;
+
+        // --- Hide loader function ---
+        function hideLoader() {
+            if (loadCompleted) return;
+            loadCompleted = true;
+            overlay.classList.add('hidden');
+        }
+
+        // --- Iframe load event ---
+        // Fires when the iframe's page has finished loading.
+        // (Works even for cross-origin URLs.)
+        frame.addEventListener('load', hideLoader);
+
+        // --- Fallback timer ---
+        // In case the 'load' event never fires (e.g. broken URL, network issue),
+        // we still reveal the page after a reasonable time.
+        const fallbackTimer = setTimeout(function() {
+            if (!loadCompleted) {
+                console.warn(
+                    '[Loader] Iframe load timeout — forcing loader to hide.'
+                );
+                hideLoader();
+            }
+        }, FALLBACK_TIMEOUT_MS);
+
+        // --- Clean up the timeout if the loader hides early ---
+        // We use a MutationObserver on the overlay's class list,
+        // but a simpler approach: override hideLoader to clear it.
+        const originalHide = hideLoader;
+        hideLoader = function() {
+            if (loadCompleted) return;
+            clearTimeout(fallbackTimer);
+            originalHide();
+        };
+
+        // Re-bind the event listener to use the new hideLoader
+        // (remove old listener, add new one)
+        frame.removeEventListener('load', originalHide);
+        frame.addEventListener('load', hideLoader);
+
+        // --- Also hide if the user clicks/taps (optional) ---
+        // Some users might want to dismiss the loader manually.
+        // Uncomment the next lines if you want that behaviour.
+        //
+        // overlay.addEventListener('click', function(e) {
+        //   if (!loadCompleted) hideLoader();
+        // });
+
+        // --- Expose a way to manually hide the loader from the console ---
+        // (useful for debugging)
+        window.__hideLoader = hideLoader;
+
+        console.log(
+            '[Loader] Waiting for iframe to load. ' +
+            'Fallback timeout: ' + (FALLBACK_TIMEOUT_MS / 1000) + 's'
+        );
+        console.log(
+            '[Loader] To manually dismiss, type __hideLoader() in the console.'
+        );
+
+    })();
+</script>
+
 </body>
 </html>
