@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Loading…</title>
+    <title>URL App Launcher</title>
 
     <style>
         /* --- Reset & base --- */
@@ -13,48 +13,156 @@
             padding: 0;
         }
 
-        html,
         body {
             width: 100vw;
             height: 100vh;
             overflow: hidden;
             background: #080b10;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            color: #e6edf3;
         }
 
-        /* --- Iframe — fills the viewport behind the loader --- */
-        #contentFrame {
+        /* --- TOP FRAME (Header / Navigation) --- */
+        #appHeader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: 64px;
+            background: #0d1117;
+            border-bottom: 1px solid #1e2a3a;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            gap: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.3px;
+            color: #f0f6fc;
+            white-space: nowrap;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .logo span {
+            color: #219EBC;
+        }
+
+        .url-bar {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 10px;
+            max-width: 780px;
+            margin-left: 12px;
+        }
+
+        .url-bar label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #8b949e;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        #urlInput {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #2d3b4f;
+            background: #0b111e;
+            color: #e6edf3;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        #urlInput:focus {
+            border-color: #219EBC;
+            box-shadow: 0 0 0 3px rgba(33, 158, 188, 0.25);
+        }
+
+        #urlInput::placeholder {
+            color: #4a5a6e;
+        }
+
+        #goButton {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            background: #219EBC;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 6px rgba(33, 158, 188, 0.3);
+        }
+
+        #goButton:hover {
+            background: #1c8aa8;
+        }
+
+        #goButton:active {
+            transform: scale(0.96);
+        }
+
+        /* --- MAIN CONTENT (below the top frame) --- */
+        #mainContent {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 64px);
+            background: #080b10;
+            overflow: hidden;
+        }
+
+        /* --- Iframe — fills the main area --- */
+        #contentFrame {
+            width: 100%;
+            height: 100%;
             border: none;
             display: block;
             background: #080b10;
-            /* fallback while loading */;
         }
 
         /* --- Loader overlay — sits on top of the iframe --- */
         #loaderOverlay {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             background: #080b10;
-            z-index: 999;
-            transition: opacity 0.7s ease, visibility 0.7s ease;
+            z-index: 50;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
             opacity: 1;
             visibility: visible;
             pointer-events: auto;
-            /* block clicks while visible */;
+            /* block interactions while visible */;
         }
 
-        /* Hidden state — fully transparent and non-interactive */
         #loaderOverlay.hidden {
             opacity: 0;
             visibility: hidden;
@@ -63,16 +171,16 @@
 
         /* --- Spinner --- */
         .loader {
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             border: 3px solid rgba(255, 255, 255, 0.08);
             border-top-color: #219EBC;
             border-right-color: #219EBC;
             animation: spin 0.8s linear infinite;
             box-shadow:
-                0 0 15px rgba(33, 158, 188, 0.25),
-                0 0 35px rgba(33, 158, 188, 0.08);
+                0 0 18px rgba(33, 158, 188, 0.2),
+                0 0 40px rgba(33, 158, 188, 0.06);
             flex-shrink: 0;
         }
 
@@ -82,28 +190,76 @@
             }
         }
 
-        /* --- Optional "loading" text --- */
         .loader-label {
-            position: absolute;
-            bottom: calc(50% - 80px);
-            color: rgba(255, 255, 255, 0.25);
-            font-size: 14px;
-            letter-spacing: 1.5px;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 13px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             font-weight: 300;
             user-select: none;
         }
 
-        /* --- Small screen tweaks --- */
-        @media (max-width: 480px) {
+        /* --- Small screen adjustments --- */
+        @media (max-width: 640px) {
+            #appHeader {
+                padding: 0 12px;
+                gap: 10px;
+                height: 56px;
+            }
+
+            #mainContent {
+                top: 56px;
+                height: calc(100vh - 56px);
+            }
+
+            .logo {
+                font-size: 15px;
+            }
+            .logo-icon {
+                font-size: 20px;
+            }
+
+            .url-bar label {
+                display: none;
+            }
+
+            #urlInput {
+                font-size: 13px;
+                padding: 6px 10px;
+                min-width: 80px;
+            }
+
+            #goButton {
+                padding: 6px 14px;
+                font-size: 13px;
+            }
+
             .loader {
-                width: 40px;
-                height: 40px;
+                width: 38px;
+                height: 38px;
                 border-width: 2.5px;
             }
             .loader-label {
                 font-size: 11px;
-                bottom: calc(50% - 64px);
+                margin-top: 14px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            #appHeader {
+                padding: 0 8px;
+                gap: 6px;
+            }
+            .logo {
+                font-size: 13px;
+            }
+            .logo-icon {
+                font-size: 16px;
+            }
+            #goButton {
+                padding: 5px 10px;
+                font-size: 12px;
             }
         }
     </style>
@@ -112,98 +268,153 @@
 <body>
 
     <!-- ============================================================
-    TARGET URL — change the `src` value below to the website
-    you want to load behind the loading screen.
+    TOP FRAME – persistent navigation bar
     ============================================================ -->
-    <iframe
-    id="contentFrame"
-    src="https://script.google.com/macros/s/AKfycbwY5nr9_iCJKhWHdz5awyrpj9RxIltbqzhR980guQhS4SFEWONUgNhNgdQdNgqPpSu-Cw/exec"
-    title="Target website"
-    loading="eager"
-></iframe>
+    <header id="appHeader">
+        <div class="logo">
+            <span class="logo-icon">⚡</span>
+            <span>URL<span>App</span></span>
+        </div>
+
+        <div class="url-bar">
+            <label for="urlInput">Target</label>
+            <input
+            type="url"
+            id="urlInput"
+            value="https://example.com"
+            placeholder="Enter web app URL…"
+            spellcheck="false"
+            autocomplete="off"
+            />
+            <button id="goButton">Go</button>
+        </div>
+    </header>
+
+    <!-- ============================================================
+    MAIN CONTENT AREA (below the frame)
+    ============================================================ -->
+    <main id="mainContent">
+        <!-- Iframe loads the target web app -->
+        <iframe
+        id="contentFrame"
+        src="https://example.com"
+        title="Web App"
+        loading="eager"
+    ></iframe>
+
+    <!-- Loader overlay (hidden once the iframe is ready) -->
+    <div id="loaderOverlay" aria-hidden="true">
+        <div class="loader"></div>
+        <span class="loader-label">Loading app</span>
+    </div>
+</main>
 
 <!-- ============================================================
-LOADER OVERLAY
-============================================================ -->
-<div id="loaderOverlay" aria-hidden="true">
-    <div class="loader"></div>
-    <span class="loader-label">Loading</span>
-</div>
-
-<!-- ============================================================
-SCRIPT — hides the loader once the iframe content loads
+SCRIPT – controls loading, navigation, and URL switching
 ============================================================ -->
 <script>
     (function() {
         'use strict';
 
+        // --- DOM references ---
         const frame = document.getElementById('contentFrame');
         const overlay = document.getElementById('loaderOverlay');
+        const urlInput = document.getElementById('urlInput');
+        const goButton = document.getElementById('goButton');
 
-        // --- Fallback timeout (safety net) ---
-        // If the iframe takes longer than 8 seconds, hide the loader anyway.
-        const FALLBACK_TIMEOUT_MS = 8000;
-
+        // --- State ---
         let loadCompleted = false;
+        let fallbackTimer = null;
 
-        // --- Hide loader function ---
+        // --- Helpers ---
+        function clearFallbackTimer() {
+            if (fallbackTimer) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+        }
+
+        function startFallbackTimer() {
+            clearFallbackTimer();
+            // If the iframe doesn't fire 'load' within 10 seconds, force-hide the loader.
+            fallbackTimer = setTimeout(function() {
+                if (!loadCompleted) {
+                    console.warn('[Loader] Fallback timer triggered – forcing loader to hide.');
+                    hideLoader();
+                }
+            }, 10000);
+        }
+
+        // --- Hide loader ---
         function hideLoader() {
             if (loadCompleted) return;
             loadCompleted = true;
+            clearFallbackTimer();
             overlay.classList.add('hidden');
         }
 
-        // --- Iframe load event ---
-        // Fires when the iframe's page has finished loading.
-        // (Works even for cross-origin URLs.)
-        frame.addEventListener('load', hideLoader);
+        // --- Show loader (called before loading a new URL) ---
+        function showLoader() {
+            loadCompleted = false;
+            overlay.classList.remove('hidden');
+            startFallbackTimer();
+        }
 
-        // --- Fallback timer ---
-        // In case the 'load' event never fires (e.g. broken URL, network issue),
-        // we still reveal the page after a reasonable time.
-        const fallbackTimer = setTimeout(function() {
-            if (!loadCompleted) {
-                console.warn(
-                    '[Loader] Iframe load timeout — forcing loader to hide.'
-                );
-                hideLoader();
+        // --- Load a new URL into the iframe ---
+        function loadUrl(url) {
+            // Basic URL validation / sanitisation
+            let targetUrl = url.trim();
+            if (!targetUrl) return;
+
+            // If no protocol, prepend https://
+            if (!/^https?:\/\//i.test(targetUrl)) {
+                targetUrl = 'https://' + targetUrl;
             }
-        }, FALLBACK_TIMEOUT_MS);
 
-        // --- Clean up the timeout if the loader hides early ---
-        // We use a MutationObserver on the overlay's class list,
-        // but a simpler approach: override hideLoader to clear it.
-        const originalHide = hideLoader;
-        hideLoader = function() {
-            if (loadCompleted) return;
-            clearTimeout(fallbackTimer);
-            originalHide();
-        };
+            // Update input field with the normalized URL
+            urlInput.value = targetUrl;
 
-        // Re-bind the event listener to use the new hideLoader
-        // (remove old listener, add new one)
-        frame.removeEventListener('load', originalHide);
-        frame.addEventListener('load', hideLoader);
+            // Show loader, reset state, and navigate
+            showLoader();
+            frame.src = targetUrl;
+        }
 
-        // --- Also hide if the user clicks/taps (optional) ---
-        // Some users might want to dismiss the loader manually.
-        // Uncomment the next lines if you want that behaviour.
-        //
-        // overlay.addEventListener('click', function(e) {
-        //   if (!loadCompleted) hideLoader();
-        // });
+        // --- Handle iframe 'load' event ---
+        function onFrameLoad() {
+            // The iframe has finished loading its content.
+            hideLoader();
+        }
 
-        // --- Expose a way to manually hide the loader from the console ---
-        // (useful for debugging)
+        // --- Event listeners ---
+
+        // 1. Iframe load
+        frame.addEventListener('load', onFrameLoad);
+
+        // 2. 'Go' button click
+        goButton.addEventListener('click', function() {
+            loadUrl(urlInput.value);
+        });
+
+        // 3. 'Enter' key on input field
+        urlInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loadUrl(urlInput.value);
+            }
+        });
+
+        // 4. Optional: manual hide via console (debugging)
         window.__hideLoader = hideLoader;
+        window.__loadUrl = loadUrl;
+
+        // --- Initial load ---
+        // Start the fallback timer for the initial page load.
+        startFallbackTimer();
 
         console.log(
-            '[Loader] Waiting for iframe to load. ' +
-            'Fallback timeout: ' + (FALLBACK_TIMEOUT_MS / 1000) + 's'
+            '[URL App] Ready. Change the URL in the top bar and click "Go" or press Enter.'
         );
-        console.log(
-            '[Loader] To manually dismiss, type __hideLoader() in the console.'
-        );
+        console.log('[URL App] Manual commands: __hideLoader() | __loadUrl("https://...")');
 
     })();
 </script>
