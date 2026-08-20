@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="1;url=https://script.google.com/macros/s/AKfycbxuqfQ00SbN1YNNgxT5qoq9iY94keOJ9YaTEdxDP_ZiY9B421lWMEhXkKNIxQ2WRnA2/exec">
+
+  <title>Loading...</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #080b10;
+    }
+
+    .loader {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.08);
+      border-top-color: #219EBC;
+      border-right-color: #219EBC;
+      animation: spin 0.8s linear infinite;
+      box-shadow:
+        0 0 15px rgba(33,158,188,0.25),
+        0 0 35px rgba(33,158,188,0.08);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loader"></div>
+</body>
+</html>
